@@ -1,0 +1,60 @@
+---
+- hosts: server1 # インベントリファイルの対象サーバを指定
+  become: yes # rootユーザーでの実行
+  tasks:
+    - name: 'yum update'
+      yum:
+        name: '*'
+        state: latest
+    - name: 'Install packages'
+      yum:
+        name: "{{ item }}"
+      with_items:
+        - git
+        - gcc
+        - openssl-devel
+        - libyaml-devel
+        - readline-devel
+        - zlib-devel
+        - libffi-devel
+    - name: 'rbenvインストール'
+      git:
+        repo: https://github.com/sstephenson/rbenv.git
+        dest: /usr/local/rbenv
+    - name: 'rbenvのshファイルを配置'
+      template:
+        src: rbenv_system.sh.j2
+        dest: /etc/profile.d/rbenv.sh
+        owner: root
+        group: root
+        mode: 0755
+    - name: 'ruby-buildインストール'
+      git:
+        repo: https://github.com/sstephenson/ruby-build.git
+        dest: /usr/local/rbenv/plugins/ruby-build
+    - name: 'deploy用のグループを作成'
+      group:
+        name: deploy
+    - name: 'ansibleユーザーをdeployグループに所属'
+      user:
+        name: ansible
+        groups: deploy
+      check_mode: yes
+    - name: 'rbenvディレクトリの所有グループをdeployに変更'
+      file:
+        path: /usr/local/rbenv
+        owner: root
+        group: deploy
+        state: directory
+        recurse: yes
+      check_mode: yes
+    - name: 'rubyインストール'
+      shell: bash -lc "rbenv install --skip-existing 2.5.0"
+    - name: 'globalセット'
+      shell: bash -lc "rbenv global 2.5.0"
+    - name: 'bundlerインストール'
+      gem:
+        name: bundler
+        user_install: no
+        executable: /usr/local/rbenv/shims/gem
+      check_mode: yes
