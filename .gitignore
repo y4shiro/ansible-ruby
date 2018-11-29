@@ -2,4 +2,6 @@
 
 *.retry
 
+# Vagrant artifacts
+.vagrant
 
