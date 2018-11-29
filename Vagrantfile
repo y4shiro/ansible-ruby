@@ -67,4 +67,24 @@ Vagrant.configure("2") do |config|
   #   apt-get update
   #   apt-get install -y apache2
   # SHELL
+
+  config.vm.define :ansible_host do |node|
+    node.vm.box = "mvbcoding/awslinux"
+    node.vm.network :forwarded_port, guest: 22, host: 2001, id: "ssh"
+    node.vm.network :private_network, ip: "192.168.33.11"
+  end
+
+  config.vm.define :server_1 do |node|
+    node.vm.box = "mvbcoding/awslinux"
+    node.vm.network :forwarded_port, guest: 22, host: 2002, id: "ssh"
+    node.vm.network :forwarded_port, guest: 80, host: 8000, id: "http"
+    node.vm.network :private_network, ip: "192.168.33.12"
+  end
+
+  config.vm.define :server_2 do |node|
+    node.vm.box = "mvbcoding/awslinux"
+    node.vm.network :forwarded_port, guest: 22, host: 2003, id: "ssh"
+    node.vm.network :forwarded_port, guest: 80, host: 8001, id: "http"
+    node.vm.network :private_network, ip: "192.168.33.13"
+  end
 end
